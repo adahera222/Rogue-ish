@@ -1,0 +1,16 @@
+# Unity3D .gitignore file.
+#     Store this file at the root of your local repository.
+.DS_Store
+Library
+Temp
+*.pidb
+*.sln
+*.csproj
+build
+
+# asset files to ignore
+*.blend
+*.jpg
+*.png
+*.psd
+*.xcf
