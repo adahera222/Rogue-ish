@@ -6,6 +6,8 @@ Temp
 *.pidb
 *.sln
 *.csproj
+*.unityproj
+*.userprefs
 build
 
 # asset files to ignore
