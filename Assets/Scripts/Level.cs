@@ -10,15 +10,24 @@ public class Level : MonoBehaviour {
 	public string levelName;
 	public int width, height;
 	public float tileWidth = 2.0f, tileHeight = 2.0f;
-		
-	private Tile[,] _tiles;
+	
+	//[UnityEngine.SerializeField]
+	public Tile[,] _tiles;
 	//private byte _tiletype, _tilewalls;
 	
-	private ResourceLoader loader;
+	private ResourceLoader _loader;
+	public ResourceLoader Loader {
+		get {
+			if (_loader == null) {
+				_loader = GetComponent<ResourceLoader>();
+			}
+			return _loader;
+		}
+	}
 	
 	// Use this for initialization
 	void Start () {
-		loader = GetComponent<ResourceLoader>();
+		_loader = GetComponent<ResourceLoader>();
 		
 		if (!string.IsNullOrEmpty(levelFile)) {
 			LoadLevelFile(levelFile);
@@ -29,7 +38,7 @@ public class Level : MonoBehaviour {
 	
 	void OnDrawGizmosSelected() {
 		if (width > 0 && height > 0) {
-			Gizmos.color = Color.blue;
+			Gizmos.color = Color.grey;
 			float halfwidth = tileWidth/2.0f, halfheight = tileHeight/2.0f;
 			
 			for (int i = 0; i <= width; i++) {
@@ -38,62 +47,111 @@ public class Level : MonoBehaviour {
 			for (int j = 0; j <= height; j++) {
 				Gizmos.DrawLine(new Vector3(-halfwidth, 0, j*tileHeight - halfheight), new Vector3(width*tileWidth - halfwidth, 0, j*tileHeight - halfheight));
 			}
+			
+			//Gizmos.color = Color.red;
+			//Gizmos.DrawWireCube(new Vector3(selectX, 0, selectY) - offset, new Vector3(tileWidth, 2, tileHeight));
 		}
 	}
 	
-	void LoadLevelFile(string filename) {
-		/* JSON Documents are currently as follows:
-		 * 	{
-		 * 		"Name":"LevelName",
-		 * 		"Width":10,
-		 * 		"Height":10,
-		 * 		"Tiles": [0,0,0,0,
-		 * 				  0,0,0,0,
-		 * 				  0,0,0,0,
-		 * 				  0,0,0,0]
-		 * }
-		 */
-		
-		StreamReader reader = new StreamReader(filename);
-		string JSONstring = reader.ReadToEnd();
-		JSON file = JSON.fromString(JSONstring);
-		
-		levelName = file._get("Name").string_value;
-		width = (int)file._get("Width").number_value;
-		height = (int)file._get("Height").number_value;
-		
-		_tiles = new Tile[width, height];
-		int i = 0, j = 0;
-		
-		foreach (JSON tile in file._get("Tiles").values) {
-			_tiles[i,j] = loader.LoadTile((byte)tile.number_value, new Vector3(i*tileWidth, 0, j*tileHeight)).GetComponent<Tile>();
-			
-			if (i >= width) {
-				if (j >= height) {
-					break; //we have reached the end, go ahead and break early
-				} else {
-					j++; i = 0;
+	public void DestroyGrid() {
+		if (_tiles != null) {
+			foreach (Tile t in _tiles) {
+				if (t != null) {
+					DestroyImmediate(t.gameObject);
 				}
-			} else {
-				i++;
 			}
 		}
 	}
 	
-	void SaveLevelFile(string filename) {
-		//This is most likely the wrong way to do it, but for now it compiles.
-		//TODO Implement proper file writing procedure
-		JSON json = new JSON();
-		JSON tilejson = JSON._array();
+	public void CreateGrid() {
+		DestroyGrid();
 		
-		json._set("Name", levelName)._set("Width", (double)width)._set("Height", (double)height);
-		foreach (Tile T in _tiles) {
-			tilejson._push((double)(T.type));
+		_tiles = new Tile[width, height];
+		Tile T;
+		
+		for (int j = 0; j < height; j++) {
+			for (int i = 0; i < width; i++) {
+				T = Loader.LoadTile(0, new Vector3(i*tileWidth, 0, j*tileHeight));
+				_tiles[i, j] = T;
+			}
 		}
-		json._set("Tiles", tilejson);
+	}
+	
+	public bool ModTile(int x, int y, byte newtype) {
+		if (_tiles == null) {
+			Debug.LogWarning("Tile grid does not exist");
+			return false;
+		}
 		
-		string jsonstring = json.stringify();
+		if (x < 0 || y < 0) {
+			//Debug.LogWarning("Tried to modify negative position");
+			return false;
+		} else if (x >= width || y >= height) {
+			//Debug.LogWarning("Tried to modify higher position than current size");
+			return false;
+		}
 		
-		File.WriteAllText(filename, jsonstring);
+		if (_tiles[x, y] != null) {
+			DestroyImmediate(_tiles[x, y].gameObject);
+			_tiles[x, y] = null;
+		}
+		
+		_tiles[x, y] = Loader.LoadTile(newtype, new Vector3(x*tileWidth, 0, y*tileHeight));
+		
+		return true;
+	}
+	
+	public void LoadLevelFile(string filename) {
+		//TODO: Implement proper file loading procedure
+		
+		//get the level file
+		WWW file = new WWW("file://"+filename);
+		
+		//wait for it to finish loading
+		while (!file.isDone) {
+			Debug.Log("Waiting to load file...");
+		}
+		
+		//extract all necessary information, create some containers
+		Texture2D tileTex = file.texture;
+		width = tileTex.width;
+		height = tileTex.height;
+		Color32[] col = tileTex.GetPixels32();
+		Color32 tileData;
+		
+		//we can now create a new grid
+		CreateGrid();
+		
+		//move through each pixel and create the proper tiles
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				tileData = col[i+j*width];
+				
+				_tiles[i,j] = Loader.LoadTile(tileData.r, new Vector3(i*tileWidth, 0, j*tileWidth));
+			}
+		}
+	}
+	
+	public void SaveLevelFile(string filename) {
+		//TODO: Implement proper file saving procedure
+		
+		//Create a texture with all the relevant tile data
+		Texture2D tileTex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+		tileTex.filterMode = FilterMode.Point;
+		tileTex.wrapMode = TextureWrapMode.Clamp;
+		
+		Color32[] col = new Color32[width*height]; //the color which holds all data
+		
+		int iter = 0;
+		foreach (Tile t in _tiles) {
+			col[iter] = new Color32(t.type, t.wall, t.data, 0);
+			
+			iter++;
+		}
+		
+		tileTex.SetPixels32(col);
+		tileTex.Apply();
+		
+		File.WriteAllBytes(filename, tileTex.EncodeToPNG());
 	}
 }

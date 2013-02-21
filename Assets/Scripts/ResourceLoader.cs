@@ -13,10 +13,17 @@ public enum TileTypes {
 	Water_Shallow,
 	Water_Deep,
 	
-	//flavor
+	//flavor, special types
 	Chasm,
 	Swamp,
 	Mushroom_Forest,
+	
+	Default = 255,
+}
+
+enum ResourceTypes {
+	Floor,
+	Wall,
 }
 
 // The resource loader is responsible for loading and setting up all the initial pieces of the level.
@@ -25,89 +32,62 @@ public enum TileTypes {
 //	When loading an object, it takes the type of object and the tile gameobject where it is located. It will then
 //		return a newly created worldobject that is located on that tile.
 public class ResourceLoader : MonoBehaviour {
-	public GameObject GetTile(byte type, byte walls) {
-		GameObject tileobj = (GameObject)Instantiate(Resources.Load("Tiles/Tile")); //the base gameobject which contains the tile component
-		Tile tile = tileobj.GetComponent<Tile>(); //the tile component in the tile object
-		GameObject mesh; //a holder for any created meshes;
-		
-		tile.type = type;
-		
-		//get the base mesh
-		switch ((TileTypes)type) {
-		case TileTypes.Wall:
-			break;
-		default:
-			mesh = (GameObject)Instantiate(Resources.Load("Tiles/Default/Base"));
-			mesh.transform.parent = tileobj.transform;
-			mesh = null;
-			break;
-		}
-		
-		//get the wall meshes
-		if ((walls & 1) > 0) {
-			//north wall
-		} else if ((walls & 2) > 0) {
-			//north door
-		} else if ((walls & 3) > 0) {
-			//north grating
-		}
-		
-		if ((walls & (1 << 2)) > 0) {
-			//east wall
-		}
-		
-		if ((walls & (1 << 4)) > 0) {
-			//south wall
-		}
-		
-		if ((walls & (1 << 6)) > 0) {
-			//west wall
-		}
-		
-		//return the completed object
-		return tileobj;
-	}
 	
-	public GameObject LoadTile(byte type, Vector3 pos) {
+	public Tile LoadTile(byte type, Vector3 pos) {
 		GameObject _base = (GameObject)Instantiate(Resources.Load("Tiles/TileBase"), pos, Quaternion.identity);
+		Tile _tile = _base.GetComponent<Tile>();
 		GameObject _temp;
 		Object[] _options;
 		
-		type = 255; //this is an override for testing, which only loads the default tileset.
+		//type = 255; //this is an override for testing, which only loads the default tileset.
+		_tile.type = type;
 		
 		switch ((TileTypes)type) {
 		case TileTypes.Wall:
-			return _base;
+			//TODO: Create a "shadow box" that is applied to the wall tiles.
+			
+			break;
 		case TileTypes.Dirt:
+			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
 			break;
 		case TileTypes.Gravel:
+			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
 			break;
 		case TileTypes.Stone:
+			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
 			break;
 		case TileTypes.Water_Shallow:
+			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
 			break;
 		case TileTypes.Water_Deep:
+			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
 			break;
 		case TileTypes.Chasm:
+			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
 			break;
 		case TileTypes.Swamp:
+			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
 			break;
 		case TileTypes.Mushroom_Forest:
+			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
 			break;
 		default:
-			_options = Resources.LoadAll("Tiles/Default"); //find all default tiles
+			_options = Resources.LoadAll("Tiles/Default", typeof(GameObject)); //find all default tiles
 			_temp = (GameObject)Instantiate(_options[Random.Range(0, _options.GetLength(0))]); //choose one at random and load it
-			_temp.transform.parent = _base.transform; //parent the new tile to the base
-			_temp.transform.localPosition = Vector3.zero; //move the mesh to the position of the base
-			_temp.transform.localRotation = RandomRot(); //apply a random rotation for extra variety	
-			
-			return _base;
+			ParentModel(_base.transform, _temp.transform);
+			_temp.transform.localRotation = RandomRot(); //apply a random rotation for extra variety
+			break;
 		}
 		
-		return _base;
+		return _tile;
+	}
+	
+	private void ParentModel(Transform p, Transform c) {
+		c.parent = p; //parent the model
+		c.localPosition = Vector3.zero; //move it to the same position as the parent
 	}
 	
 	private Quaternion RandomRot() {
-		return Quaternion.Euler(0f, Random.Range(0, 3)*90f, 0f);
+		return Quaternion.Euler(0f, Random.Range(0, 4)*90f, 0f); //integer random range is exclusive of the max, so put a 4 there
 	}
 }

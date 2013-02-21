@@ -2,7 +2,10 @@ using UnityEngine;
 using System.Collections;
 
 public class Tile : MonoBehaviour {
-	public byte type;
+	public byte type; //the type of tile
+	public byte wall; //the walls surrounding this tile ( N,E,S,W : 00-open, 01-wall, 02-door, 03-grate )
+	public byte data; //data about this tile, including rotation, visibility, and others;
+	
 	public bool walkable;
 	public bool opaque;
 	public bool filled;
