@@ -21,11 +21,6 @@ public enum TileTypes {
 	Default = 255,
 }
 
-enum ResourceTypes {
-	Floor,
-	Wall,
-}
-
 // The resource loader is responsible for loading and setting up all the initial pieces of the level.
 //	When loading a tile, it takes the type of the tile and the walls. With this, it retrieves the proper meshes,
 //		attaches them to a gameobject with a tile component, then returns it for use in the level.
@@ -34,8 +29,11 @@ enum ResourceTypes {
 public class ResourceLoader : MonoBehaviour {
 	
 	public Tile LoadTile(byte type, Vector3 pos) {
+		Debug.Log("Loading Tile. type="+type.ToString());
+		
 		GameObject _base = (GameObject)Instantiate(Resources.Load("Tiles/TileBase"), pos, Quaternion.identity);
 		Tile _tile = _base.GetComponent<Tile>();
+		
 		GameObject _temp;
 		Object[] _options;
 		
@@ -44,8 +42,9 @@ public class ResourceLoader : MonoBehaviour {
 		
 		switch ((TileTypes)type) {
 		case TileTypes.Wall:
-			//TODO: Create a "shadow box" that is applied to the wall tiles.
-			
+			//This works fine, but disabled for now since it makes editing harder to visualize
+			//_temp = (GameObject)Instantiate(Resources.Load("Tiles/Wall_Block"), pos, Quaternion.identity);
+			//ParentModel(_base, _temp);
 			break;
 		case TileTypes.Dirt:
 			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
@@ -72,9 +71,9 @@ public class ResourceLoader : MonoBehaviour {
 			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");
 			break;
 		default:
-			_options = Resources.LoadAll("Tiles/Default", typeof(GameObject)); //find all default tiles
+			_options = Resources.LoadAll("Tiles/Default/Floor", typeof(GameObject)); //find all default tiles
 			_temp = (GameObject)Instantiate(_options[Random.Range(0, _options.GetLength(0))]); //choose one at random and load it
-			ParentModel(_base.transform, _temp.transform);
+			ParentModel(_base, _temp);
 			_temp.transform.localRotation = RandomRot(); //apply a random rotation for extra variety
 			break;
 		}
@@ -82,9 +81,9 @@ public class ResourceLoader : MonoBehaviour {
 		return _tile;
 	}
 	
-	private void ParentModel(Transform p, Transform c) {
-		c.parent = p; //parent the model
-		c.localPosition = Vector3.zero; //move it to the same position as the parent
+	private void ParentModel(GameObject p, GameObject c) {
+		c.transform.parent = p.transform; //parent the model
+		c.transform.localPosition = Vector3.zero; //move it to the same position as the parent
 	}
 	
 	private Quaternion RandomRot() {

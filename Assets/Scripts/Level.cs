@@ -61,6 +61,8 @@ public class Level : MonoBehaviour {
 				}
 			}
 		}
+		
+		_tiles = null;
 	}
 	
 	public void CreateGrid() {
