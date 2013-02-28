@@ -30,6 +30,9 @@ public class Level : MonoBehaviour {
 		}
 		return null;
 	}
+	public Tile GetTile(Coordinates co) {
+		return GetTile (co.x, co.y);
+	}
 	private int TileIndex(int x, int y) {
 		//get the linear index for the 2d tile. Return -1 if position is not valid
 		int index = y*width+x;

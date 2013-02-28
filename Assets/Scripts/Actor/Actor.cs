@@ -23,7 +23,7 @@ public class Actor : MonoBehaviour {
 		}
 		
 		coords = Level.PositionToCoords(transform.position);
-		transform.position = Level.CoordsToPosition(coords);
+		transform.position = Level.CoordsToPosition(coords); //not sure if this should always happen. Moves actor to align with grid
 	}
 }
 

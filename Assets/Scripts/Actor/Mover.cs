@@ -11,9 +11,8 @@ public enum MoveType {
 public class Mover : MonoBehaviour {
 	public Actor actor;
 	
-	public bool canMove;
-	public float moveSpeed;
-	public MoveType moveType;
+	public bool canMove = true;
+	public float moveSpeed = 10f;
 	
 	private bool isMoving;
 	private bool releasedOrigin; //determine whether the lock has been released on the origin
@@ -33,35 +32,27 @@ public class Mover : MonoBehaviour {
 	void Start () {
 		actor = GetComponent<Actor>();
 		actor.mover = this;
+		
+		origin = actor.level.GetTile(actor.coords);
 	}
 	
 	private IEnumerator Move() {
 		isMoving = true;
 		
 		destination.occupied = true;
+		releasedOrigin = false;
 		
-		switch (moveType) {
-			//add the code for the other movement types here
-		default: //default is also normal
-			//tell the model to animate right here.
-			while (Remaining > .01f) {
-				transform.position = Vector3.MoveTowards(transform.position, destination.transform.position, moveSpeed*Time.deltaTime);
-				
-				if (Percent > .5f) { //squared percentage
-					if (!releasedOrigin) {
-						origin.occupied = false;
-						
-						releasedOrigin = true;
-					}
-				}
-				
-				yield return null;
+		while (Remaining > .001f) {
+			if (Percent > .25 && !releasedOrigin) {
+				origin.occupied = false;
+				releasedOrigin = true;
 			}
-			transform.position = destination.transform.position;
-			//tell the model to stop animating here.
 			
-			break;
+			transform.position = Vector3.MoveTowards(transform.position, destination.transform.position, moveSpeed*Time.deltaTime);
+			
+			yield return null;
 		}
+		transform.position = destination.transform.position;
 		
 		isMoving = false;
 		origin = destination; //prepare for the next move
@@ -79,7 +70,7 @@ public class Mover : MonoBehaviour {
 				if (!destination.canWalk) return; //the tile is not walkable
 				
 				actor.coords = new Coordinates(x,y);
-				StartCoroutine(Move ());
+				StartCoroutine(Move());
 			}
 		}
 	}
