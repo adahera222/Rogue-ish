@@ -45,6 +45,11 @@ public class ResourceLoader : MonoBehaviour {
 			//This works fine, but disabled for now since it makes editing harder to visualize
 			//_temp = (GameObject)Instantiate(Resources.Load("Tiles/Wall_Block"), pos, Quaternion.identity);
 			//ParentModel(_base, _temp);
+			_tile.canWalk = false;
+			_tile.canFly = false;
+			_tile.canDig = true;
+			_tile.canSee = false;
+			
 			break;
 		case TileTypes.Dirt:
 			Debug.LogWarning("Tile Type " + type.ToString() + " has not been implemented yet");

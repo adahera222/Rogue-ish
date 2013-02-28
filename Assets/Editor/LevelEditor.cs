@@ -11,14 +11,15 @@ public class LevelEditor : Editor {
 	Plane plane = new Plane(Vector3.up, Vector3.zero);
 	Ray ray;
 	float outdist;
-	Vector3 selectPoint, offset = new Vector3(1, 0, 1);
+	//Vector3 selectPoint, offset = new Vector3(1, 0, 1);
 	int selectX, selectY, new_selectX, new_selectY;
+	Coordinates selectCoords = new Coordinates(), new_selectCoords = new Coordinates();
 	bool newTile; //are we over a new tile since last frame? Prevents rapid modifying when dragging
 	
 	void OnEnable() {
-		Level t = (Level)target;
+		//Level t = (Level)target;
 		
-		offset = new Vector3(t.tileWidth/2f, 0, t.tileHeight/2f);
+		//offset = new Vector3(Level.TileSize/2f, 0, Level.TileSize/2f);
 	}
 	
 	void OnSceneGUI() {
@@ -30,17 +31,14 @@ public class LevelEditor : Editor {
 			ray = HandleUtility.GUIPointToWorldRay(cur.mousePosition);
 			
 			if (plane.Raycast(ray, out outdist)) {
-				selectPoint = ray.GetPoint(outdist) + offset;
+				//selectPoint = ray.GetPoint(outdist) + offset;
 				
-				new_selectX = Mathf.FloorToInt(selectPoint.x / t.tileWidth);
-				new_selectY = Mathf.FloorToInt(selectPoint.z / t.tileHeight);
+				//new_selectX = Mathf.FloorToInt(selectPoint.x / t.TileSize);
+				//new_selectY = Mathf.FloorToInt(selectPoint.z / t.TileSize);
+				new_selectCoords = Level.PositionToCoords(ray.GetPoint(outdist));
 				
-				if (new_selectX != selectX) {
-					selectX = new_selectX;
-					newTile = true;
-				}
-				if (new_selectY != selectY) {
-					selectY = new_selectY;
+				if (new_selectCoords != selectCoords) {
+					selectCoords = new_selectCoords;
 					newTile = true;
 				}
 				
@@ -52,7 +50,7 @@ public class LevelEditor : Editor {
 			if (cur.type == EventType.MouseDown || cur.type == EventType.MouseDrag) {
 				if (cur.button == 1) {
 					if (newTile) {
-						t.ModTile(selectX, selectY, selectType);
+						t.ModTile(selectCoords.x, selectCoords.y, selectType);
 						cur.Use();
 						newTile = false;
 					}
